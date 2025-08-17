@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Employee Manager</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { cursor: pointer; background-color: #f4f4f4; }
+        .controls { margin-bottom: 10px; }
+        button { margin-left: 5px; }
+    </style>
+</head>
+<body>
+
+<h1>Employee Manager</h1>
+
+<div class="controls">
+    <label>
+        Role:
+        <input type="text" id="filterRole" placeholder="Filter by role" />
+    </label>
+    <label>
+        Search:
+        <input type="text" id="searchKeyword" placeholder="Keyword search by name" />
+    </label>
+    <button onclick="loadEmployees()">Filter</button>
+    <button onclick="exportCSV()">Export CSV</button>
+    <button onclick="bulkDelete()">Bulk Delete</button>
+
+    <!-- New CSV File Upload -->
+    <input type="file" id="csvFileInput" accept=".csv" />
+    <button onclick="uploadCSV()">Import CSV</button>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th><input type="checkbox" onchange="toggleSelectAll(this)" /></th>
+        <th data-field="name" onclick="sortByField('name')">Name</th>
+        <th data-field="role" onclick="sortByField('role')">Role</th>
+        <th data-field="salary" onclick="sortByField('salary')">Salary</th>
+    </tr>
+    </thead>
+    <tbody id="employeeTableBody"></tbody>
+</table>
+
+<div>
+    <button onclick="changePage(currentPage - 1)" id="prevBtn" disabled>Prev</button>
+    <span>Page <span id="currentPageDisplay">1</span> of <span id="totalPagesDisplay">1</span></span>
+    <button onclick="changePage(currentPage + 1)" id="nextBtn" disabled>Next</button>
+</div>
+
+<script>
+    const API_BASE_URL = "http://localhost:8080/api/employees";
+    let currentPage = 0;
+    let totalPages = 1;
+    let currentSortBy = "id";
+    let currentSortDir = "asc";
+
+    function loadEmployees() {
+      const role = document.getElementById("filterRole").value.trim();
+      const keyword = document.getElementById("searchKeyword").value.trim();
+
+      let url = `${API_BASE_URL}?page=${currentPage}&size=10&sortBy=${currentSortBy}&sortDir=${currentSortDir}`;
+      if (role) url += `&role=${encodeURIComponent(role)}`;
+      if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          renderTable(data.content);
+          totalPages = data.totalPages;
+          document.getElementById("currentPageDisplay").textContent = currentPage + 1;
+          document.getElementById("totalPagesDisplay").textContent = totalPages;
+          document.getElementById("prevBtn").disabled = currentPage === 0;
+          document.getElementById("nextBtn").disabled = currentPage >= totalPages - 1;
+        })
+        .catch(err => alert("Failed to load employees."));
+    }
+
+    function renderTable(employees) {
+      const tbody = document.getElementById("employeeTableBody");
+      tbody.innerHTML = "";
+      for (const emp of employees) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><input type="checkbox" data-id="${emp.id}"/></td>
+          <td>${emp.name}</td>
+          <td>${emp.role}</td>
+          <td>${emp.salary}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function changePage(newPage) {
+      if (newPage < 0 || newPage >= totalPages) return;
+      currentPage = newPage;
+      loadEmployees();
+    }
+
+    function sortByField(field) {
+      if (field === currentSortBy) {
+        currentSortDir = currentSortDir === "asc" ? "desc" : "asc";
+      } else {
+        currentSortBy = field;
+        currentSortDir = "asc";
+      }
+      loadEmployees();
+    }
+
+    function toggleSelectAll(source) {
+      const checkboxes = document.querySelectorAll("#employeeTableBody input[type=checkbox]");
+      checkboxes.forEach(cb => cb.checked = source.checked);
+    }
+
+    function bulkDelete() {
+      const selectedIds = Array.from(document.querySelectorAll("#employeeTableBody input[type=checkbox]:checked"))
+        .map(cb => parseInt(cb.dataset.id));
+
+      if (selectedIds.length === 0) {
+        alert("Please select at least one employee to delete.");
+        return;
+      }
+
+      if (!confirm(`Delete ${selectedIds.length} employees?`)) return;
+
+      fetch(`${API_BASE_URL}/bulk-delete`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(selectedIds)
+      })
+      .then(res => {
+        if (res.ok) {
+          alert("Employees deleted");
+          loadEmployees();
+        } else {
+          alert("Failed to delete employees");
+        }
+      });
+    }
+
+    function exportCSV() {
+      const role = document.getElementById("filterRole").value.trim();
+      const keyword = document.getElementById("searchKeyword").value.trim();
+
+      let url = `${API_BASE_URL}/export?page=${currentPage}&size=10&sortBy=${currentSortBy}&sortDir=${currentSortDir}`;
+      if (role) url += `&role=${encodeURIComponent(role)}`;
+      if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
+
+      window.open(url, "_blank");
+    }
+
+    // New function to upload CSV file
+    function uploadCSV() {
+      const fileInput = document.getElementById("csvFileInput");
+      const file = fileInput.files[0];
+      if (!file) {
+        alert("Please select a CSV file to upload.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      fetch(`${API_BASE_URL}/import`, {
+        method: "POST",
+        body: formData
+      })
+      .then(res => {
+        if (res.ok) {
+          alert("CSV imported successfully.");
+          fileInput.value = "";  // Clear file input
+          loadEmployees();
+        } else {
+          alert("Failed to import CSV.");
+        }
+      })
+      .catch(() => alert("Failed to import CSV."));
+    }
+
+    // Initial load
+    loadEmployees();
+</script>
+
+</body>
+</html>
