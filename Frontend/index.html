@@ -11,6 +11,10 @@
         th { cursor: pointer; background-color: #f4f4f4; }
         .controls { margin-bottom: 10px; }
         button { margin-left: 5px; }
+        .add-employee { margin-top: 20px; padding: 10px; border: 1px solid #aaa; max-width: 400px; }
+        .add-employee label { display: block; margin-top: 5px; }
+        .add-employee input { width: 100%; padding: 5px; box-sizing: border-box; }
+        .add-employee button { margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -30,9 +34,27 @@
     <button onclick="exportCSV()">Export CSV</button>
     <button onclick="bulkDelete()">Bulk Delete</button>
 
-    <!-- New CSV File Upload -->
+    <!-- CSV File Upload -->
     <input type="file" id="csvFileInput" accept=".csv" />
     <button onclick="uploadCSV()">Import CSV</button>
+</div>
+
+<!-- Add Single Employee Form -->
+<div class="add-employee">
+    <h2>Add Single Employee</h2>
+    <label>
+        Name:
+        <input type="text" id="newName" placeholder="Enter name" />
+    </label>
+    <label>
+        Role:
+        <input type="text" id="newRole" placeholder="Enter role" />
+    </label>
+    <label>
+        Salary:
+        <input type="number" id="newSalary" placeholder="Enter salary" />
+    </label>
+    <button onclick="addEmployee()">Add Employee</button>
 </div>
 
 <table>
@@ -87,7 +109,7 @@
       for (const emp of employees) {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td><input type="checkbox" data-id="${emp.id}"/></td>
+          <td><input type="checkbox" data-id="${emp.id}" /></td>
           <td>${emp.name}</td>
           <td>${emp.role}</td>
           <td>${emp.salary}</td>
@@ -140,7 +162,8 @@
         } else {
           alert("Failed to delete employees");
         }
-      });
+      })
+      .catch(() => alert("Failed to delete employees."));
     }
 
     function exportCSV() {
@@ -154,7 +177,6 @@
       window.open(url, "_blank");
     }
 
-    // New function to upload CSV file
     function uploadCSV() {
       const fileInput = document.getElementById("csvFileInput");
       const file = fileInput.files[0];
@@ -170,16 +192,51 @@
         method: "POST",
         body: formData
       })
-      .then(res => {
-        if (res.ok) {
-          alert("CSV imported successfully.");
-          fileInput.value = "";  // Clear file input
-          loadEmployees();
-        } else {
-          alert("Failed to import CSV.");
-        }
+        .then(res => {
+          if (res.ok) {
+            alert("CSV imported successfully.");
+            fileInput.value = ""; // Clear input
+            loadEmployees();
+          } else {
+            alert("Failed to import CSV.");
+          }
+        })
+        .catch(() => alert("Failed to import CSV."));
+    }
+
+    function addEmployee() {
+      const name = document.getElementById("newName").value.trim();
+      const role = document.getElementById("newRole").value.trim();
+      const salaryStr = document.getElementById("newSalary").value.trim();
+
+      if (!name || !role || !salaryStr) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      const salary = parseFloat(salaryStr);
+      if (isNaN(salary) || salary <= 0) {
+        alert("Please enter a valid positive salary.");
+        return;
+      }
+
+      fetch(`${API_BASE_URL}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, role, salary })
       })
-      .catch(() => alert("Failed to import CSV."));
+        .then(res => {
+          if (res.ok) {
+            alert("Employee added successfully.");
+            document.getElementById("newName").value = "";
+            document.getElementById("newRole").value = "";
+            document.getElementById("newSalary").value = "";
+            loadEmployees();
+          } else {
+            alert("Failed to add employee.");
+          }
+        })
+        .catch(() => alert("Failed to add employee."));
     }
 
     // Initial load
