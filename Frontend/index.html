@@ -4,18 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Employee Manager</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { cursor: pointer; background-color: #f4f4f4; }
-        .controls { margin-bottom: 10px; }
-        button { margin-left: 5px; }
-        .add-employee { margin-top: 20px; padding: 10px; border: 1px solid #aaa; max-width: 400px; }
-        .add-employee label { display: block; margin-top: 5px; }
-        .add-employee input { width: 100%; padding: 5px; box-sizing: border-box; }
-        .add-employee button { margin-top: 10px; }
-    </style>
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
@@ -39,7 +28,6 @@
     <button onclick="uploadCSV()">Import CSV</button>
 </div>
 
-<!-- Add Single Employee Form -->
 <div class="add-employee">
     <h2>Add Single Employee</h2>
     <label>
@@ -61,9 +49,9 @@
     <thead>
     <tr>
         <th><input type="checkbox" onchange="toggleSelectAll(this)" /></th>
-        <th data-field="name" onclick="sortByField('name')">Name</th>
-        <th data-field="role" onclick="sortByField('role')">Role</th>
-        <th data-field="salary" onclick="sortByField('salary')">Salary</th>
+        <th id="headerName" onclick="sortByField('name')">Name</th>
+        <th id="headerRole" onclick="sortByField('role')">Role</th>
+        <th id="headerSalary" onclick="sortByField('salary')">Salary</th>
     </tr>
     </thead>
     <tbody id="employeeTableBody"></tbody>
@@ -75,6 +63,6 @@
     <button onclick="changePage(currentPage + 1)" id="nextBtn" disabled>Next</button>
 </div>
 
-
+<script src="script.js"></script>
 </body>
 </html>

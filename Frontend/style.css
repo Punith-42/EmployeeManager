@@ -1,0 +1,51 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    cursor: pointer;
+    background-color: #f4f4f4;
+}
+
+.controls {
+    margin-bottom: 10px;
+}
+
+button {
+    margin-left: 5px;
+}
+
+.add-employee {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #aaa;
+    max-width: 400px;
+}
+
+.add-employee label {
+    display: block;
+    margin-top: 5px;
+}
+
+.add-employee input {
+    width: 100%;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.add-employee button {
+    margin-top: 10px;
+}
