@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8081/api/employees";
+const API_BASE_URL = "http://localhost:8080/api/employees";
 let currentPage = 0;
 let totalPages = 1;
 let currentSortBy = "id";
@@ -36,9 +36,16 @@ function renderTable(employees) {
       <td>${emp.name}</td>
       <td>${emp.role}</td>
       <td>${emp.salary}</td>
+      <td><button onclick="editEmployee(${emp.id}, '${escapeHtml(emp.name)}', '${escapeHtml(emp.role)}', ${emp.salary})">Edit</button></td>
     `;
     tbody.appendChild(tr);
   }
+}
+
+// Basic escaping of quotes for HTML attribute safety
+function escapeHtml(text) {
+  if (!text) return "";
+  return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
 function changePage(newPage) {
@@ -133,7 +140,7 @@ function uploadCSV() {
   .then(res => {
     if (res.ok) {
       alert("CSV imported successfully.");
-      fileInput.value = ""; // Clear input
+      fileInput.value = "";
       loadEmployees();
     } else {
       alert("Failed to import CSV.");
@@ -142,39 +149,47 @@ function uploadCSV() {
   .catch(() => alert("Failed to import CSV."));
 }
 
-function addEmployee() {
-  const name = document.getElementById("newName").value.trim();
-  const role = document.getElementById("newRole").value.trim();
-  const salaryStr = document.getElementById("newSalary").value.trim();
+// Edit Employee feature
 
-  if (!name || !role || !salaryStr) {
-    alert("Please fill in all fields.");
-    return;
-  }
+function editEmployee(id, name, role, salary) {
+  document.getElementById("editEmployeeModal").style.display = "block";
+  document.getElementById("editId").value = id;
+  document.getElementById("editName").value = name;
+  document.getElementById("editRole").value = role;
+  document.getElementById("editSalary").value = salary;
+}
 
+function closeEditModal() {
+  document.getElementById("editEmployeeModal").style.display = "none";
+}
+
+function submitEdit() {
+  const id = document.getElementById("editId").value;
+  const name = document.getElementById("editName").value.trim();
+  const role = document.getElementById("editRole").value.trim();
+  const salaryStr = document.getElementById("editSalary").value.trim();
   const salary = parseFloat(salaryStr);
-  if (isNaN(salary) || salary <= 0) {
-    alert("Please enter a valid positive salary.");
+
+  if (!name || !role || isNaN(salary) || salary <= 0) {
+    alert("Please fill all fields with valid data.");
     return;
   }
 
-  fetch(`${API_BASE_URL}`, {
-    method: "POST",
+  fetch(`${API_BASE_URL}/${id}`, {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, role, salary })
   })
   .then(res => {
     if (res.ok) {
-      alert("Employee added successfully.");
-      document.getElementById("newName").value = "";
-      document.getElementById("newRole").value = "";
-      document.getElementById("newSalary").value = "";
+      alert("Employee updated.");
+      closeEditModal();
       loadEmployees();
     } else {
-      alert("Failed to add employee.");
+      alert("Failed to update employee.");
     }
   })
-  .catch(() => alert("Failed to add employee."));
+  .catch(() => alert("Failed to update employee."));
 }
 
 // Initial load
