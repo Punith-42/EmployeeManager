@@ -27,19 +27,25 @@ input {
   border: 1px solid gray;
 }
 
+/* Simple table with no lines */
 table {
-  border-collapse: collapse;
   width: 100%;
   margin-top: 20px;
+  border-collapse: separate; /* ensure separate cells */
 }
 
 th, td {
-  border: 1px solid black;
   padding: 8px;
   text-align: left;
+  /* No borders or lines here */
 }
 
 th {
   background-color: lightgray;
   cursor: pointer;
+}
+
+/* Optional: add some space between rows */
+tbody tr {
+  margin-bottom: 8px;
 }
